@@ -138,4 +138,45 @@ class PrioritizedSweepingValueIterationAgent(ValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
+        predecessors = {}
+        priorityQueue = util.PriorityQueue()
+
+        # Compute predecessors of all states
+        for state in self.mdp.getStates():
+            if not self.mdp.isTerminal(state):
+                for action in self.mdp.getPossibleActions(state):
+                    for nextState, prob in self.mdp.getTransitionStatesAndProbs(state, action):
+                        if prob > 0:
+                            if nextState not in predecessors:
+                                predecessors[nextState] = set()
+                            predecessors[nextState].add(state)
+
+        # Initialize priorities
+        for state in self.mdp.getStates():
+            if not self.mdp.isTerminal(state):
+                currentValue = self.values[state]
+                maxQValue = max([self.computeQValueFromValues(state, action) 
+                              for action in self.mdp.getPossibleActions(state)])
+                diff = abs(currentValue - maxQValue)
+                priorityQueue.update(state, -diff)  # Negative because lower numbers = higher priority
+
+        # Perform prioritized sweeping
+        for _ in range(self.iterations):
+            if priorityQueue.isEmpty():
+                break
+            state = priorityQueue.pop()
+            if not self.mdp.isTerminal(state):
+                maxQValue = max([self.computeQValueFromValues(state, action) 
+                              for action in self.mdp.getPossibleActions(state)])
+                self.values[state] = maxQValue
+
+            for predecessor in predecessors.get(state, set()):
+                if not self.mdp.isTerminal(predecessor):
+                    currentValue = self.values[predecessor]
+                    maxQValue = max([self.computeQValueFromValues(predecessor, action) 
+                                   for action in self.mdp.getPossibleActions(predecessor)])
+                    diff = abs(currentValue - maxQValue)
+                    if diff > self.theta:
+                        priorityQueue.update(predecessor, -diff)
+
 

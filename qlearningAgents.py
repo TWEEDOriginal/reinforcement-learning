@@ -43,7 +43,7 @@ class QLearningAgent(ReinforcementAgent):
         ReinforcementAgent.__init__(self, **args)
 
         "*** YOUR CODE HERE ***"
-        self.qValues = util.Counter()
+        self.qValues = util.Counter() # Initializes all unseen (state, action) pairs to 0.0
 
     def getQValue(self, state, action):
         """
@@ -98,9 +98,13 @@ class QLearningAgent(ReinforcementAgent):
         legalActions = self.getLegalActions(state)
         action = None
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        if not legalActions:
+            return action
 
-        return action
+        if util.flipCoin(self.epsilon):  # explore
+            return random.choice(legalActions)
+        else:  # exploit
+            return self.getPolicy(state)
 
     def update(self, state, action, nextState, reward):
         """
